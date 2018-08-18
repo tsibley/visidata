@@ -17,8 +17,11 @@ def _defaggr(name, type, func):
 
 def aggregator(name, func, *args, type=None):
     'Define simple aggregator `name` that calls func(values)'
-    def _func(col, rows):  # wrap builtins so they can have a .type
-        return func(col.getValues(rows), *args)
+    def _func(col, rows, values=None):  # wrap builtins so they can have a .type
+        if values is None:  # use cached values if available
+            values = col.getValues(rows)
+        return func(values, *args)
+
     aggregators[name] = _defaggr(name, type, _func)
 
 ## specific aggregator implementations
@@ -76,7 +79,7 @@ aggregators['q5'] = quantiles(5)
 aggregators['q10'] = quantiles(10)
 
 # returns keys of the row with the max value
-aggregators['keymax'] = _defaggr('keymax', anytype, lambda col, rows: col.sheet.rowkey(max(col.getValueRows(rows))[1]))
+aggregators['keymax'] = _defaggr('keymax', anytype, lambda col,rows,values: col.sheet.rowkey(max(col.getValueRows(rows))[1]))
 
 ColumnsSheet.addCommand('g+', 'aggregate-cols', 'addAggregators(selectedRows or source[0].nonKeyVisibleCols, chooseMany(aggregators.keys()))')
 

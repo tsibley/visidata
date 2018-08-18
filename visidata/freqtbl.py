@@ -46,12 +46,13 @@ class SheetFreqTable(Sheet):
         for c in self.source.visibleCols:
             aggcols = [Column(aggregator.__name__+'_'+c.name,
                                  type=aggregator.type or c.type,
-                                 getter=lambda col,row,origcol=c,aggr=aggregator: aggr(origcol, row[1]),
+                                 origCol=c,
+                                 getter=lambda col,row,aggr=aggregator: aggr(col.origCol, row[1], row[2][col.origCol]),
                                  sql='%s(%s)' % (aggregator, c.name))
                             for aggregator in getattr(c, 'aggregators', [])]
             if aggcols:
                 nc = Column('n_'+c.name, type=len, cache=True, width=0,
-                            getter=lambda col,row,origcol=c: list(origcol.getValues(row[1])))
+                            getter=lambda col,row: len(row[2][col.origCol]))
                 self.addColumn(nc)
 
             for newcol in aggcols:
@@ -147,11 +148,17 @@ class SheetFreqTable(Sheet):
             formatted_keys = tuple(wrapply(c.format, c.getTypedValue(r)) for c in self.origCols)
             histrow = rowidx.get(formatted_keys)
             if histrow is None:
-                histrow = (keys, [])
+                histrow = (keys, [], collections.defaultdict(list))
                 rowidx[formatted_keys] = histrow
                 self.addRow(histrow)
             histrow[1].append(r)
             self.largest = max(self.largest, len(histrow[1]))
+
+        for hr in self.rows:
+            for c in self.columns:
+                if getattr(c, 'origCol', None):  # aggregated column
+                    hr[2][c.origCol] = list(c.origCol.getValues(hr[1]))
+
 
         self.rows.sort(key=lambda r: len(r[1]), reverse=True)  # sort by num reverse
 
