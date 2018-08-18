@@ -1683,6 +1683,13 @@ class Sheet(BaseSheet):
                     self.rowLayout[dispRowIdx] = y
 
                     row = rows[rowidx]
+                    if isinstance(row, TypedWrapper):  # None/exception rows fill the width of the sheet
+                        if vcolidx == min(self.visibleColLayout.keys()):
+                            colwidth = sum(w+1 for x,w in self.visibleColLayout.values())-1
+                        else:
+                            y += 1
+                            continue
+
                     cellval = col.getCell(row, colwidth-1)
 
                     attr = self.colorizeCell(col, row, cellval)
