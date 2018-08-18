@@ -37,19 +37,26 @@ class SheetFreqTable(Sheet):
         nkeys = len(self.keyCols)
 
         self.columns.extend([
-            Column('count', type=int, getter=lambda col,row: len(row[1]), sql='COUNT(*)'),
+            Column(sheet.rowtype, type=len, getter=lambda col,row: row[1]),
             Column('percent', type=float, getter=lambda col,row: len(row[1])*100/col.sheet.source.nRows, sql=''),
             Column('histogram', type=str, getter=lambda col,row: options.disp_histogram*(options.disp_histolen*len(row[1])//col.sheet.largest), width=options.disp_histolen+2, sql=''),
         ])
 
-        aggregatedCols = [Column(aggregator.__name__+'_'+c.name,
+        aggregatedCols = []
+        for c in self.source.visibleCols:
+            aggcols = [Column(aggregator.__name__+'_'+c.name,
                                  type=aggregator.type or c.type,
                                  getter=lambda col,row,origcol=c,aggr=aggregator: aggr(origcol, row[1]),
-                                 sql='%s(%s)' % (aggregator, c.name) )
-                             for c in self.source.visibleCols
-                                for aggregator in getattr(c, 'aggregators', [])
-                         ]
-        self.columns.extend(aggregatedCols)
+                                 sql='%s(%s)' % (aggregator, c.name))
+                            for aggregator in getattr(c, 'aggregators', [])]
+            if aggcols:
+                nc = Column('n_'+c.name, type=len, cache=True, width=0,
+                            getter=lambda col,row,origcol=c: list(origcol.getValues(row[1])))
+                self.addColumn(nc)
+
+            for newcol in aggcols:
+                self.addColumn(newcol)
+            aggregatedCols.extend(aggcols)
 
         if aggregatedCols:  # hide percent/histogram if aggregations added
             for c in self.columns[nkeys+1:nkeys+3]:
