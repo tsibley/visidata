@@ -2044,7 +2044,10 @@ class Column:
 
     def getTypedValue(self, row):
         'Returns the properly-typed value for the given row at this column.'
-        return wrapply(self.type, wrapply(self.getValue, row))
+        v = wrapply(self.getValue, row)
+        if v is None or v == '':
+            return None
+        return wrapply(self.type, v)
 
     def getTypedValueOrException(self, row):
         'Returns the properly-typed value for the given row at this column, or an Exception object.'
