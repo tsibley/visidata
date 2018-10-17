@@ -179,6 +179,8 @@ class CommandLog(TsvSheet):
         except ValueError:
             vs = vd().getSheet(r.sheet) or error('no sheet named %s' % r.sheet)
 
+        vd().push(vs)  # move current sheet to top
+
         if r.row:
             try:
                 rowidx = int(r.row)
