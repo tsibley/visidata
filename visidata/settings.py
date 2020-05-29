@@ -311,7 +311,7 @@ def parseArgs(vd, parser:argparse.ArgumentParser):
 
     # apply command-line overrides after .visidatarc
     for optname, optval in vars(args).items():
-        if optval is not None and optname not in ['inputs', 'play', 'batch', 'output', 'diff']:
+        if optval is not None and optname not in ['inputs', 'play', 'batch', 'output', 'diff', 'filetype']:
             options[optname] = optval
 
     return args

@@ -130,7 +130,7 @@ def main_vd():
 
     sources = []
     for src in inputs:
-        vs = openSource(src)
+        vs = openSource(src, filetype=args.filetype)
         vd.cmdlog.openHook(vs, src)
         sources.append(vs)
 

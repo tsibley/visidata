@@ -153,9 +153,6 @@ def openPath(vd, p, filetype=None):
 
 @VisiData.global_api
 def openSource(vd, p, filetype=None):
-    if not filetype:
-        filetype = options.filetype
-
     if isinstance(p, str):
         if '://' in p:
             return vd.openPath(Path(p), filetype=filetype)  # convert to Path and recurse
