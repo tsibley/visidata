@@ -185,6 +185,8 @@ class OptionsObject:
         return self._set(k, v, 'global', helpstr=helpstr)
 
     def getall(self, kmatch):
+        # XXX TODO: pretty sure this is broken... I don't think self._opts
+        # uses tuple keys anymore.  but the method looks uncalled.
         return {obj:opt for (k, obj), opt in self._opts.items() if k == kmatch}
 
     def __getattr__(self, k):      # options.foo
@@ -310,8 +312,33 @@ def parseArgs(vd, parser:argparse.ArgumentParser):
     args, remaining = parser.parse_known_args()
 
     # apply command-line overrides after .visidatarc
+    non_option_args = {'inputs', 'play', 'batch', 'output', 'diff'}
+
+    # XXX TODO: the Option class should probably get an additional boolean
+    # property indicating if the option is source-specific or not, which can
+    # then be used here to enumerate them rather than hard code a list.
+    source_specific_opts = {
+        'csv_delimiter',
+        'csv_dialect',
+        'csv_escapechar',
+        'csv_lineterminator',
+        'csv_quotechar',
+        'csv_skipinitialspace',
+        'delimiter',
+        'encoding',
+        'encoding_errors',
+        'filetype',
+        'header',
+        'row_delimiter',
+        'skip',
+        'tsv_safe_newline',
+        'tsv_safe_tab',
+    }
+
+    non_overrideable = non_option_args | source_specific_opts
+
     for optname, optval in vars(args).items():
-        if optval is not None and optname not in ['inputs', 'play', 'batch', 'output', 'diff', 'filetype']:
+        if optval is not None and optname not in non_overrideable:
             options[optname] = optval
 
     return args

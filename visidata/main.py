@@ -132,6 +132,42 @@ def main_vd():
     for src in inputs:
         vs = openSource(src, filetype=args.filetype)
         vd.cmdlog.openHook(vs, src)
+
+        # set command-line options which are specific to the command-line sources
+        #
+        # XXX TODO: the Option class should probably get an additional boolean
+        # property indicating if the option is source-specific or not, which
+        # can then be used here to enumerate them rather than hard code a
+        # list.
+        #
+        # XXX TODO: some of these (csv_*, for example) are fetched with a
+        # context object.  others (encoding, encoding_errors, and delimiter to
+        # name a few) are not, e.g. "options.encoding" instead of
+        # "options.get('encoding', obj)", so setting them here isn't respected
+        # currently.
+        source_specific_opts = {
+            'csv_delimiter',
+            'csv_dialect',
+            'csv_escapechar',
+            'csv_lineterminator',
+            'csv_quotechar',
+            'csv_skipinitialspace',
+            'delimiter',
+            'encoding',
+            'encoding_errors',
+            'filetype',
+            'header',
+            'row_delimiter',
+            'skip',
+            'tsv_safe_newline',
+            'tsv_safe_tab',
+        }
+
+        for opt in source_specific_opts:
+            optval = getattr(args, opt)
+            if optval is not None:
+                options.set(opt, optval, vs)
+
         sources.append(vs)
 
     vd.sheets.extend(sources)  # purposefully do not load everything
